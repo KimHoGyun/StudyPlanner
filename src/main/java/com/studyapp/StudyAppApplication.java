@@ -3,12 +3,14 @@ package com.studyapp;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
+// 명시적 스캔 추가
 public class StudyAppApplication {
 
     public static void main(String[] args) {
@@ -17,7 +19,7 @@ public class StudyAppApplication {
         System.out.println("🚀 Study App Server Started!");
         System.out.println("📍 Server: http://localhost:8080");
         System.out.println("🗄️ H2 Console: http://localhost:8080/h2-console");
-        System.out.println("📚 API Base URL: http://localhost:8080/api");
+        System.out.println("📚 API Test: http://localhost:8080/api/auth/test");
         System.out.println("=================================");
     }
 
@@ -31,11 +33,11 @@ public class StudyAppApplication {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOriginPatterns("*")  // allowedOrigins("*") 대신 사용
+                registry.addMapping("/**")  // 모든 경로 허용
+                        .allowedOriginPatterns("*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(false);    // credentials를 false로 변경
+                        .allowCredentials(false);
             }
         };
     }
