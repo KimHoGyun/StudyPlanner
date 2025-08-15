@@ -64,6 +64,10 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:3000",  // 개발 환경
+                "https://study-planner-one-navy.vercel.app"  // Vercel 배포 URL
+        ));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
