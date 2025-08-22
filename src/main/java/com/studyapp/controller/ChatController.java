@@ -1,6 +1,7 @@
 // src/main/java/com/studyapp/controller/ChatController.java
 package com.studyapp.controller;
 
+import java.util.stream.Collectors;
 import com.studyapp.entity.ChatMessage;
 import com.studyapp.entity.StudyGroup;
 import com.studyapp.entity.User;
@@ -118,7 +119,7 @@ public class ChatController {
                 messageMap.put("sender", senderMap);
 
                 return messageMap;
-            }).toList();
+            }).collect(Collectors.toList());
 
             return ResponseEntity.ok(response);
 
@@ -160,7 +161,7 @@ public class ChatController {
                 messageMap.put("sender", senderMap);
 
                 return messageMap;
-            }).toList();
+            }).collect(Collectors.toList());
 
             return ResponseEntity.ok(response);
 
