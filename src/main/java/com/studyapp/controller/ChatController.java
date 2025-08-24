@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class ChatController {
 
     @Autowired
@@ -34,9 +34,22 @@ public class ChatController {
     @Autowired
     private StudyGroupRepository studyGroupRepository;
 
+    // OPTIONS 메서드 명시적 처리
+    @RequestMapping(value = "/send", method = RequestMethod.OPTIONS)
+    public ResponseEntity<?> handleOptions() {
+        return ResponseEntity.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                .build();
+    }
+
     @PostMapping("/send")
     public ResponseEntity<?> sendMessage(@RequestBody Map<String, Object> request) {
         try {
+            System.out.println("=== 메시지 전송 요청 받음 ===");
+            System.out.println("Request data: " + request);
+
             Long studyGroupId = Long.valueOf(request.get("studyGroupId").toString());
             Long userId = Long.valueOf(request.get("userId").toString());
             String content = (String) request.get("content");
@@ -44,10 +57,13 @@ public class ChatController {
             String fileName = (String) request.get("fileName");
             String fileUrl = (String) request.get("fileUrl");
 
+            System.out.println("StudyGroupId: " + studyGroupId + ", UserId: " + userId);
+
             Optional<User> userOpt = userRepository.findById(userId);
             Optional<StudyGroup> studyGroupOpt = studyGroupRepository.findById(studyGroupId);
 
             if (!userOpt.isPresent() || !studyGroupOpt.isPresent()) {
+                System.out.println("User 또는 StudyGroup을 찾을 수 없음");
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
                 errorResponse.put("message", "User or study group not found");
@@ -64,20 +80,29 @@ public class ChatController {
             message.setCreatedAt(LocalDateTime.now());
             message.setDeleted(false);
 
-            chatMessageRepository.save(message);
+            ChatMessage savedMessage = chatMessageRepository.save(message);
+            System.out.println("메시지 저장 성공: " + savedMessage.getId());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Message sent successfully");
-            response.put("messageId", message.getId());
-            return ResponseEntity.ok(response);
+            response.put("messageId", savedMessage.getId());
+
+            return ResponseEntity.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .body(response);
 
         } catch (Exception e) {
+            System.err.println("메시지 전송 오류: " + e.getMessage());
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "Failed to send message: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .body(errorResponse);
         }
     }
 
@@ -121,14 +146,19 @@ public class ChatController {
                 return messageMap;
             }).collect(Collectors.toList());
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .body(response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .build();
         }
     }
 
+    // 나머지 메서드들도 동일하게 CORS 헤더 추가...
     @GetMapping("/{studyGroupId}/poll")
     public ResponseEntity<List<Map<String, Object>>> pollNewMessages(
             @PathVariable Long studyGroupId,
@@ -163,11 +193,15 @@ public class ChatController {
                 return messageMap;
             }).collect(Collectors.toList());
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .body(response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .build();
         }
     }
 
@@ -193,7 +227,9 @@ public class ChatController {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
                 errorResponse.put("message", "Only the sender can delete this message");
-                return ResponseEntity.status(403).body(errorResponse);
+                return ResponseEntity.status(403)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(errorResponse);
             }
 
             message.setDeleted(true);
@@ -202,14 +238,18 @@ public class ChatController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Message deleted successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .body(response);
 
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "Failed to delete message: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .body(errorResponse);
         }
     }
 }

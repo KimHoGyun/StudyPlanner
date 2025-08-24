@@ -22,26 +22,20 @@ public class SecurityConfig {
                 // CSRF 비활성화 (API 서버이므로)
                 .csrf().disable()
 
-                // CORS 설정
-                .cors().and()
+                // CORS 설정 - 더 관대하게 설정
+                .cors().configurationSource(corsConfigurationSource())
+                .and()
 
                 // 세션 사용하지 않음 (Stateless)
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
 
-                // URL별 접근 권한 설정 (Spring Boot 2.7 방식)
+                // URL별 접근 권한 설정
                 .authorizeHttpRequests()
-                // 인증 없이 접근 가능한 URL들
-                .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/study-groups/**").permitAll()
-                .antMatchers("/api/attendance/**").permitAll()
-                .antMatchers("/api/test", "/api/health").permitAll()
-                .antMatchers("/h2-console/**").permitAll()
-                .antMatchers("/error", "/").permitAll()
-                .antMatchers("/actuator/**").permitAll()
-                // 나머지 모든 요청은 인증 필요
-                .anyRequest().authenticated()
+                // 모든 API 엔드포인트를 일시적으로 허용
+                .antMatchers("/**").permitAll()
+                .anyRequest().permitAll()
                 .and()
 
                 // HTTP Basic 인증 비활성화
@@ -59,15 +53,28 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // 모든 도메인 허용 (개발 환경용)
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+
+        // 모든 HTTP 메서드 허용
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+
+        // 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // 자격 증명 허용하지 않음 (allowCredentials와 allowedOrigins "*" 동시 사용 불가)
         configuration.setAllowCredentials(false);
+
+        // Pre-flight 요청 캐시 시간
         configuration.setMaxAge(3600L);
+
+        // 노출할 헤더
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }
